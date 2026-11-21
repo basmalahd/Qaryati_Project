@@ -61,3 +61,14 @@ Roles: `admin`, `editor`, `verifier`, `viewer` (public registration creates `vie
 Suggestions are never written automatically; apply one with `PATCH /api/v1/villages/{id}`.
 Provider settings (all optional): `GEOCODING_BASE_URL`, `GEOCODING_USER_AGENT`,
 `GEOCODING_TIMEOUT_SECONDS`, `GEOCODING_MAX_RETRIES`. Design: `docs/adr/006-external-geocoding-integration.md`.
+
+## Names, relations and geography
+| Action | viewer | verifier | editor | admin |
+|---|---|---|---|---|
+| Read names / nearby places | yes | yes | yes | yes |
+| Add / edit names, add nearby places | | | yes | yes |
+| Delete names / nearby places | | | | yes |
+
+- `GET|POST /api/v1/villages/{id}/names`, `PATCH|DELETE .../names/{name_id}`
+- `GET|POST /api/v1/villages/{id}/nearby`, `DELETE .../nearby/{relation_id}`
+- `elevation_m` and `area_km2` are regular optional fields of `POST|PATCH /api/v1/villages`.

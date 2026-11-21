@@ -91,7 +91,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def validation_handler(request: Request, exc: RequestValidationError):
         details = [
-            {"field": ".".join(str(p) for p in e["loc"][1:]), "message": e["msg"]}
+            {"field": ".".join(str(p) for p in e["loc"][1:]) or "body", "message": e["msg"]}
             for e in exc.errors()
         ]
         return _response(request, 422, "VALIDATION_ERROR", "Request validation failed", details)
