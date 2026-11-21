@@ -1,10 +1,14 @@
+from functools import lru_cache
+
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core import security
+from app.core.config import settings
 from app.core.errors import ForbiddenError, UnauthorizedError
 from app.db.session import get_db
+from app.integrations.geocoding import GeocodingProvider, build_geocoder
 from app.models.user import Role, User
 from app.repositories.user_repository import UserRepository
 
@@ -34,3 +38,9 @@ def require_roles(*roles: Role):
         return user
 
     return checker
+
+
+@lru_cache
+def get_geocoder() -> GeocodingProvider:
+    """One shared instance per process so the cache and the rate-limit throttle are shared."""
+    return build_geocoder(settings)
