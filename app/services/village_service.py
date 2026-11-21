@@ -1,5 +1,3 @@
-import math
-
 from sqlalchemy.orm import Session
 
 from app.core.errors import ConflictError, NotFoundError, UnprocessableError
@@ -7,6 +5,7 @@ from app.models.user import User
 from app.models.village import Village
 from app.repositories.governorate_repository import GovernorateRepository
 from app.repositories.village_repository import VillageRepository
+from app.schemas.common import build_page
 from app.schemas.village import VillageCreate, VillageUpdate
 from app.services.audit_service import AuditService
 
@@ -32,13 +31,7 @@ class VillageService:
     # ---- queries -----------------------------------------------------
     def search(self, q, governorate_id, sort, order, page, page_size) -> dict:
         items, total = self.villages.search(q, governorate_id, sort, order, page, page_size)
-        return {
-            "items": items,
-            "page": page,
-            "page_size": page_size,
-            "total": total,
-            "total_pages": math.ceil(total / page_size) if total else 0,
-        }
+        return build_page(items, total, page, page_size)
 
     def get(self, village_id: int) -> Village:
         village = self.villages.get_detail(village_id)

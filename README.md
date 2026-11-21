@@ -42,3 +42,14 @@ Roles: `admin`, `editor`, `verifier`, `viewer` (public registration creates `vie
 
 ## Villages API
 `GET /api/v1/villages?q=&governorate_id=&sort=name_ar|name_en|created_at|id&order=asc|desc&page=1&page_size=20`
+
+## Sources & population
+| Action | viewer | verifier | editor | admin |
+|---|---|---|---|---|
+| Read sources / population history | yes | yes | yes | yes |
+| Create / update sources | | | yes | yes |
+| Add / edit population records | | | yes | yes |
+| Change verification status | | yes | | yes |
+| Delete population records | | | | yes |
+
+`GET /api/v1/villages/{id}/population?verification_status=&from_year=&to_year=`
