@@ -16,10 +16,12 @@ class AppError(Exception):
     status_code = 500
     code = "INTERNAL_ERROR"
 
-    def __init__(self, message: str, details: list | None = None):
+    def __init__(self, message: str, details: list | None = None, code: str | None = None):
         super().__init__(message)
         self.message = message
         self.details = details or []
+        if code:
+            self.code = code
 
 
 class NotFoundError(AppError):
@@ -30,6 +32,20 @@ class NotFoundError(AppError):
 class ConflictError(AppError):
     status_code = 409
     code = "CONFLICT"
+
+
+class BadGatewayError(AppError):
+    """An upstream (external) service answered with something unusable."""
+
+    status_code = 502
+    code = "BAD_GATEWAY"
+
+
+class ServiceUnavailableError(AppError):
+    """An upstream (external) service is down/slow; the client may retry later."""
+
+    status_code = 503
+    code = "SERVICE_UNAVAILABLE"
 
 
 class UnprocessableError(AppError):

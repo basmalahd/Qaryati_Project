@@ -53,3 +53,11 @@ Roles: `admin`, `editor`, `verifier`, `viewer` (public registration creates `vie
 | Delete population records | | | | yes |
 
 `GET /api/v1/villages/{id}/population?verification_status=&from_year=&to_year=`
+
+## External API: geocoding (Nominatim / OpenStreetMap)
+- `GET /api/v1/villages/{id}/location-suggestions` - suggested coordinates for a village (editor/admin)
+- `GET /api/v1/geocoding/search?q=Nablus&limit=5` - free-text place search (editor/admin)
+
+Suggestions are never written automatically; apply one with `PATCH /api/v1/villages/{id}`.
+Provider settings (all optional): `GEOCODING_BASE_URL`, `GEOCODING_USER_AGENT`,
+`GEOCODING_TIMEOUT_SECONDS`, `GEOCODING_MAX_RETRIES`. Design: `docs/adr/006-external-geocoding-integration.md`.
