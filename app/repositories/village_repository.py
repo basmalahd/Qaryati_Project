@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.village import Village
 from app.models.village_name import VillageName
+from app.repositories.utils import escape_like
 
 SORTABLE = {
     "id": Village.id,
@@ -10,11 +11,6 @@ SORTABLE = {
     "name_en": Village.name_en,
     "created_at": Village.created_at,
 }
-
-
-def _escape_like(value: str) -> str:
-    """Treat user input literally: '%' and '_' must not act as wildcards."""
-    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 class VillageRepository:
@@ -31,6 +27,9 @@ class VillageRepository:
         )
         return self.db.scalars(stmt).unique().one_or_none()
 
+    def get(self, village_id: int) -> Village | None:
+        return self.db.get(Village, village_id)
+
     def get_by_slug(self, slug: str) -> Village | None:
         return self.db.scalar(select(Village).where(Village.slug == slug))
 
@@ -45,7 +44,7 @@ class VillageRepository:
     ) -> tuple[list[Village], int]:
         conditions = []
         if q:
-            pattern = f"%{_escape_like(q.strip())}%"
+            pattern = f"%{escape_like(q.strip())}%"
             alt_name_match = exists().where(
                 VillageName.village_id == Village.id,
                 VillageName.name.ilike(pattern, escape="\\"),

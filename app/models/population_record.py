@@ -44,3 +44,4 @@ class PopulationRecord(TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text)
 
     village: Mapped["Village"] = relationship(back_populates="population_records")  # noqa: F821
+    source: Mapped["Source"] = relationship()  # noqa: F821
