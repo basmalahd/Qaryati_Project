@@ -30,3 +30,15 @@ docker compose exec api alembic revision --autogenerate -m "message"
 4. In Swagger (`/docs`): `POST /api/v1/auth/login`, then **Authorize** with the access token.
 
 Roles: `admin`, `editor`, `verifier`, `viewer` (public registration creates `viewer`).
+
+## Permissions
+| Action | viewer | verifier | editor | admin |
+|---|---|---|---|---|
+| Read villages / governorates / stats | yes | yes | yes | yes |
+| Create / update villages | | | yes | yes |
+| Delete villages | | | | yes |
+| Create governorates | | | | yes |
+| Read audit log | | | | yes |
+
+## Villages API
+`GET /api/v1/villages?q=&governorate_id=&sort=name_ar|name_en|created_at|id&order=asc|desc&page=1&page_size=20`

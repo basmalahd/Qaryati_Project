@@ -38,3 +38,21 @@ def client(session_factory):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def auth_headers(client, session_factory):
+    """Factory: creates a user with the given role directly in the DB and returns Bearer headers."""
+    from app.core.security import hash_password
+    from app.models.user import User
+
+    def _make(role: str = "viewer", email: str | None = None) -> dict:
+        email = email or f"{role}@example.com"
+        with session_factory() as db:
+            db.add(User(email=email, full_name=role.title(),
+                        hashed_password=hash_password("Password123"), role=role))
+            db.commit()
+        r = client.post("/api/v1/auth/login", json={"email": email, "password": "Password123"})
+        return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    return _make
