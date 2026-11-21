@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, ForeignKey, Index, String
+from sqlalchemy import CheckConstraint, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -16,6 +16,7 @@ class VillageName(TimestampMixin, Base):
             "name_type IN ('alternative_spelling','transliteration','former','historical')",
             name="ck_village_names_type",
         ),
+        UniqueConstraint("village_id", "name", "name_type", name="uq_village_names_unique"),
         Index("ix_village_names_village_id", "village_id"),
         Index("ix_village_names_name", "name"),
     )
@@ -33,3 +34,4 @@ class VillageName(TimestampMixin, Base):
     )
 
     village: Mapped["Village"] = relationship(back_populates="names")  # noqa: F821
+    source: Mapped["Source | None"] = relationship()  # noqa: F821

@@ -11,6 +11,8 @@ Name150 = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, 
 Slug = Annotated[str, Field(min_length=1, max_length=150, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")]
 Latitude = Annotated[float, Field(ge=-90, le=90)]
 Longitude = Annotated[float, Field(ge=-180, le=180)]
+Elevation = Annotated[float, Field(ge=-500, le=3000)]  # metres (Dead Sea is about -430)
+Area = Annotated[float, Field(gt=0, le=100000)]  # square kilometres
 
 
 class VillageCreate(BaseModel):
@@ -21,6 +23,8 @@ class VillageCreate(BaseModel):
     historical_overview: str | None = Field(default=None, max_length=20000)
     latitude: Latitude | None = None
     longitude: Longitude | None = None
+    elevation_m: Elevation | None = None
+    area_km2: Area | None = None
     governorate_id: int = Field(ge=1)
 
     @model_validator(mode="after")
@@ -40,6 +44,8 @@ class VillageUpdate(BaseModel):
     historical_overview: str | None = Field(default=None, max_length=20000)
     latitude: Latitude | None = None
     longitude: Longitude | None = None
+    elevation_m: Elevation | None = None
+    area_km2: Area | None = None
     governorate_id: int | None = Field(default=None, ge=1)
 
     @field_validator("slug", "name_ar", "governorate_id")
@@ -75,6 +81,8 @@ class VillageDetail(VillageSummary):
     historical_overview: str | None
     latitude: float | None
     longitude: float | None
+    elevation_m: float | None
+    area_km2: float | None
     names: list[VillageNameRead]
     created_at: datetime
     updated_at: datetime

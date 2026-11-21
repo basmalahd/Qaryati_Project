@@ -1,4 +1,4 @@
-from sqlalchemy import Float, ForeignKey, Index, String, Text
+from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -8,6 +8,11 @@ from app.models.mixins import TimestampMixin
 class Village(TimestampMixin, Base):
     __tablename__ = "villages"
     __table_args__ = (
+        CheckConstraint(
+            "elevation_m IS NULL OR (elevation_m >= -500 AND elevation_m <= 3000)",
+            name="ck_villages_elevation_range",
+        ),
+        CheckConstraint("area_km2 IS NULL OR area_km2 > 0", name="ck_villages_area_positive"),
         Index("ix_villages_name_ar", "name_ar"),
         Index("ix_villages_name_en", "name_en"),
         Index("ix_villages_governorate_id", "governorate_id"),
@@ -21,6 +26,8 @@ class Village(TimestampMixin, Base):
     historical_overview: Mapped[str | None] = mapped_column(Text)
     latitude: Mapped[float | None] = mapped_column(Float)
     longitude: Mapped[float | None] = mapped_column(Float)
+    elevation_m: Mapped[float | None] = mapped_column(Float)
+    area_km2: Mapped[float | None] = mapped_column(Float)
     governorate_id: Mapped[int] = mapped_column(
         ForeignKey("governorates.id", ondelete="RESTRICT"), nullable=False
     )

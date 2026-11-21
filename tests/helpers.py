@@ -15,3 +15,9 @@ def make_village(client, headers, gov_id, **kw):
     r = client.post(f"{API}/villages", json=payload(gov_id, **kw), headers=headers)
     assert r.status_code == 201, r.text
     return r.json()
+
+
+def make_source(client, headers, title="PCBS 1997", source_type="census"):
+    r = client.post(f"{API}/sources", json={"title": title, "source_type": source_type}, headers=headers)
+    assert r.status_code == 201, r.text
+    return r.json()["id"]

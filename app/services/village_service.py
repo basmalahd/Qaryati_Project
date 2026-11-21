@@ -11,7 +11,7 @@ from app.services.audit_service import AuditService
 
 _FIELDS = (
     "slug", "name_ar", "name_en", "name_origin", "historical_overview",
-    "latitude", "longitude", "governorate_id",
+    "latitude", "longitude", "elevation_m", "area_km2", "governorate_id",
 )
 
 
