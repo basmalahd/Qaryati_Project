@@ -72,3 +72,14 @@ Provider settings (all optional): `GEOCODING_BASE_URL`, `GEOCODING_USER_AGENT`,
 - `GET|POST /api/v1/villages/{id}/names`, `PATCH|DELETE .../names/{name_id}`
 - `GET|POST /api/v1/villages/{id}/nearby`, `DELETE .../nearby/{relation_id}`
 - `elevation_m` and `area_km2` are regular optional fields of `POST|PATCH /api/v1/villages`.
+
+## History, landmarks, heritage, economy, facilities
+Under `/api/v1/villages/{id}/`: `events` (timeline, `?from_year=&to_year=`), `landmarks` (`?category=`),
+`heritage` (`?category=`), `economy` (`?category=`), `facilities` (`?facility_type=`).
+Each supports `GET`, `POST`, `PATCH /{item_id}` and `DELETE /{item_id}`; every item can cite a `source_id`.
+
+| Action | viewer | verifier | editor | admin |
+|---|---|---|---|---|
+| Read | yes | yes | yes | yes |
+| Create / update | | | yes | yes |
+| Delete | | | | yes |
