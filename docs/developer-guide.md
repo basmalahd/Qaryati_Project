@@ -18,7 +18,9 @@ Swagger: http://localhost:8000/docs
 Tests need no Postgres and no `.env` (`tests/conftest.py` sets SQLite and a test JWT key):
 ```
 pip install -r requirements.txt
-pytest -q
+pytest -m unit                  # ~4 s: services against fakes, no DB, no network
+pytest -m integration           # HTTP API + in-memory SQLite
+pytest --cov=app                # whole suite + coverage gate (fails below 90%)
 ```
 Docker mounts only `./app` and `./alembic`; after changing `requirements.txt` or the Dockerfile run `docker compose up --build -d`.
 
@@ -57,9 +59,11 @@ Docker mounts only `./app` and `./alembic`; after changing `requirements.txt` or
   Always also run the migration once on the real PostgreSQL container.
 
 ## Testing conventions
-- Fixtures in `tests/conftest.py`: `client` (TestClient with an in-memory SQLite DB, foreign keys enforced like PostgreSQL), `session_factory`, and `auth_headers("admin"|"editor"|"verifier"|"viewer")`.
-- Shared helpers in `tests/helpers.py` (`make_gov`, `make_village`, `make_source`, `API`).
-- External services are replaced with fakes through `app.dependency_overrides` (e.g. `get_geocoder`); **tests never touch the real network**.
+Full strategy: `docs/testing-strategy.md` (ADR-009).
+- **Where a test lives decides its marker:** `tests/unit/` (no DB, no network) or `tests/integration/` (HTTP API + in-memory SQLite). A test outside both folders is rejected by `conftest.py`.
+- **Unit tests** build a service with a fake session and fake repositories (`tests/unit/fakes.py`) and assert rules, ordering (`insert -> audit -> commit`) and that rejected requests write nothing.
+- **Integration tests** use the fixtures in `tests/conftest.py`: `client` (TestClient, in-memory SQLite with foreign keys enforced like PostgreSQL), `session_factory`, and `auth_headers("admin"|"editor"|"verifier"|"viewer")`. Shared helpers: `tests/helpers.py` (`make_gov`, `make_village`, `make_source`, `API`).
+- External services are replaced with fakes through `app.dependency_overrides` (e.g. `get_geocoder`) or `httpx.MockTransport`; **tests never touch the real network**.
 - Every endpoint needs tests for: permissions (401/403), validation (422), not-found (404), conflicts (409) and the happy path; writes also check the audit entry.
 
 ## Where things are

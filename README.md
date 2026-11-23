@@ -83,3 +83,13 @@ Each supports `GET`, `POST`, `PATCH /{item_id}` and `DELETE /{item_id}`; every i
 | Read | yes | yes | yes | yes |
 | Create / update | | | yes | yes |
 | Delete | | | | yes |
+
+## Testing
+```
+pip install -r requirements.txt
+pytest -m unit          # fast, no DB, no network
+pytest -m integration   # HTTP API + in-memory SQLite
+pytest --cov=app        # everything + coverage gate (>= 90%)
+```
+Strategy and trade-offs: [docs/testing-strategy.md](docs/testing-strategy.md) (ADR-009).
+Developer conventions: [docs/developer-guide.md](docs/developer-guide.md).
