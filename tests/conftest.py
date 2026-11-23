@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 # Tests must not depend on a developer's .env or on a running Postgres.
 os.environ.setdefault("DATABASE_URL", "sqlite://")
@@ -60,3 +61,13 @@ def auth_headers(client, session_factory):
         return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
     return _make
+
+
+def pytest_collection_modifyitems(items):
+    """tests/unit -> @unit, tests/integration -> @integration. Unclassified tests are rejected."""
+    tests_dir = Path(__file__).parent
+    for item in items:
+        folder = Path(item.path).relative_to(tests_dir).parts[0]
+        if folder not in ("unit", "integration"):
+            raise pytest.UsageError(f"{item.nodeid}: put tests in tests/unit or tests/integration")
+        item.add_marker(getattr(pytest.mark, folder))
