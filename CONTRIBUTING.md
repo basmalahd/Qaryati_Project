@@ -21,7 +21,8 @@ under her own GitHub account; nobody pushes to `main` directly.
 - One purpose per PR; keep PRs small enough to review in a few minutes.
 - Never commit secrets, `.env`, build output or generated files.
 - Schema changes need an Alembic migration, and `alembic check` must be clean.
-- New behaviour needs tests; important decisions need a short ADR in `docs/adr/`.
+- New behaviour needs tests (unit and/or integration, see `docs/testing-strategy.md`); important decisions need a short ADR in `docs/adr/`.
+- ADR numbers are reserved to avoid clashes: 009 testing (Basmala), 010 rate limiting and 011 logging (Shaymaa), 012 indexing and caching (Hanaa). Later ones take the next free number.
 - Files that cause merge conflicts easily (`app/main.py`, `app/core/config.py`,
   `app/api/v1/router.py`, `requirements.txt`, `README.md`): pull often and keep changes there small.
 
