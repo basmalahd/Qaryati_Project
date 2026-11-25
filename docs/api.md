@@ -47,6 +47,12 @@ Design rationale: [ADR-002](adr/002-authentication.md).
 Nested lists accept their own filters, e.g. `/villages/{id}/population?verification_status=&from_year=&to_year=`,
 `/events?from_year=&to_year=`, `/landmarks?category=`, `/facilities?facility_type=`.
 
+### Statistics (native SQL)
+- `GET /stats/villages-by-governorate`: number of villages per governorate.
+- `GET /stats/latest-population?governorate_id=&limit=20`: the most recent usable population record of each village,
+  largest first. Newest year wins; on the same year `verified` beats `pending`; `disputed` records are ignored and
+  villages without a usable record are not listed. `limit` is 1-100.
+
 ## 5. Error model
 Every error (business, validation, auth, unknown route, unexpected) has the same shape ([ADR-003](adr/003-error-model.md)):
 ```json
