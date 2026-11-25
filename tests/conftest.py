@@ -3,14 +3,13 @@
 import os
 from pathlib import Path
 
-# Must be configured before importing app.main / app.core.config.
-# Tests should not depend on local .env files or a running PostgreSQL server.
-os.environ.setdefault("DATABASE_URL", "sqlite://")
+# Set before importing app.main or app.core.config.
+# CI sets TEST_DATABASE_URL to PostgreSQL; local tests default to SQLite.
+_TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite://")
+os.environ.setdefault("DATABASE_URL", _TEST_DATABASE_URL)
 os.environ.setdefault("JWT_SECRET_KEY", "t" * 64)
 os.environ["APP_ENV"] = "test"
 os.environ["CORS_ORIGINS"] = "http://localhost:3000"
-# API tests must not compete for a single IP quota. Dedicated rate-limit
-# tests explicitly opt in via monkeypatch.setenv("RATE_LIMIT_ENABLED", "true").
 os.environ["RATE_LIMIT_ENABLED"] = "false"
 
 import pytest  # noqa: E402
@@ -19,7 +18,7 @@ from sqlalchemy import create_engine, event  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
 from sqlalchemy.pool import StaticPool  # noqa: E402
 
-from app import models  # noqa: E402,F401  (registers tables)
+from app import models  # noqa: E402,F401
 from app.core.rate_limit import clear_rate_limits  # noqa: E402
 from app.db.session import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
@@ -27,7 +26,6 @@ from app.main import app  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def isolate_rate_limit_state():
-    """Avoid quota state leaking between tests, including dedicated limiter tests."""
     clear_rate_limits()
     yield
     clear_rate_limits()
@@ -35,19 +33,26 @@ def isolate_rate_limit_state():
 
 @pytest.fixture()
 def session_factory():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
+    database_url = os.getenv("TEST_DATABASE_URL", "sqlite://")
+    if database_url.startswith("sqlite"):
+        engine = create_engine(
+            database_url,
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
 
-    @event.listens_for(engine, "connect")
-    def _enforce_foreign_keys(dbapi_connection, _record):
-        # PostgreSQL enforces foreign keys; SQLite needs an explicit pragma.
-        dbapi_connection.execute("PRAGMA foreign_keys=ON")
+        @event.listens_for(engine, "connect")
+        def _enforce_foreign_keys(dbapi_connection, _record):
+            dbapi_connection.execute("PRAGMA foreign_keys=ON")
+    else:
+        engine = create_engine(database_url, pool_pre_ping=True)
 
+    # Each test starts with empty tables; the PostgreSQL service is dedicated to CI.
     Base.metadata.create_all(engine)
     try:
         yield sessionmaker(bind=engine, autoflush=False)
     finally:
+        Base.metadata.drop_all(engine)
         engine.dispose()
 
 
