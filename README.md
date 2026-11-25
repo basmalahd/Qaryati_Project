@@ -93,3 +93,17 @@ pytest --cov=app        # everything + coverage gate (>= 90%)
 ```
 Strategy and trade-offs: [docs/testing-strategy.md](docs/testing-strategy.md) (ADR-009).
 Developer conventions: [docs/developer-guide.md](docs/developer-guide.md).
+
+<!-- Paste this section into README.md (after "Testing") -->
+
+## Documentation
+| Topic | Where |
+|---|---|
+| System overview and architecture | [docs/architecture.md](docs/architecture.md) |
+| Database schema (ERD) | [docs/erd.md](docs/erd.md) |
+| API conventions, auth flow, error model, roles | [docs/api.md](docs/api.md) |
+| OpenAPI spec / Postman collection | [docs/api/openapi.json](docs/api/openapi.json), [docs/api/qaryati.postman_collection.json](docs/api/qaryati.postman_collection.json) |
+| Engineering decisions register | [docs/engineering-decisions.md](docs/engineering-decisions.md) |
+| Architecture Decision Records | [docs/adr/](docs/adr/) |
+| Testing strategy | [docs/testing-strategy.md](docs/testing-strategy.md) |
+| Developer conventions / workflow | [docs/developer-guide.md](docs/developer-guide.md), [CONTRIBUTING.md](CONTRIBUTING.md) |
