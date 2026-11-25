@@ -4,6 +4,9 @@ from pathlib import Path
 # Tests must not depend on a developer's .env or on a running Postgres.
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("JWT_SECRET_KEY", "t" * 64)
+# Fixed (not setdefault) so the suite behaves the same whatever a developer's shell or .env says.
+os.environ["APP_ENV"] = "test"
+os.environ["CORS_ORIGINS"] = "http://localhost:3000"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
