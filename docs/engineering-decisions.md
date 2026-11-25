@@ -16,7 +16,7 @@ chose, and where the reasoning lives. Items marked **Planned** are not done yet 
 | Names and geography | Alternative names and nearby places as separate tables | ADR-007 |
 | External API | Geocoding behind a port with timeout, retries, throttling to the provider limit, TTL cache and graceful failure | ADR-006 |
 | Authentication / authorization | JWT access (15 min) + refresh (7 days), Argon2id hashing, four roles via `require_roles` | ADR-002 |
-| Raw SQL | Native SQL for the villages-by-governorate stats aggregation (`village_repository.count_by_governorate`); ORM everywhere else | `app/repositories` |
+| Raw SQL | Two native-SQL cases, both read-only and fully parameterised: villages-by-governorate aggregation (`village_repository.count_by_governorate`) and latest population per village using a window function (`population_repository.latest_per_village`); ORM everywhere else | `app/repositories` |
 | Testing | Unit tests with fakes (no DB/network) + integration tests over HTTP; coverage gate 90% | ADR-009, `docs/testing-strategy.md` |
 | Git workflow | Feature branches, PRs, reviewer rotation, focused commits | `CONTRIBUTING.md` |
 | Configuration | `pydantic-settings` from environment/`.env`; secrets never committed; JWT secret must be 32+ chars | `.env.example` |

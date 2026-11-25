@@ -158,3 +158,7 @@ class PopulationService:
         return PopulationRead.model_validate(record).model_copy(
             update={"has_conflict": self.records.has_conflict(village_id, record.reference_year)}
         )
+
+    # ---- queries -----------------------------------------------------
+    def latest_per_village(self, governorate_id: int | None, limit: int) -> list[dict]:
+        return self.records.latest_per_village(governorate_id, limit)
