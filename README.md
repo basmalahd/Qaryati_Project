@@ -1,6 +1,5 @@
 # Qaryati - Palestinian Villages Knowledge Platform
 
-<img width="1436" height="999" alt="Qaryati_ Palestinian Villages Knowledge Platform" src="https://github.com/user-attachments/assets/a09d8071-9eeb-4fc1-9ee2-f53638f79a28" />
 
 ## Overview
 
