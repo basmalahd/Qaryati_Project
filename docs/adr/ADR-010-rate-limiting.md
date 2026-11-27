@@ -1,8 +1,8 @@
 # ADR-010: Per-IP API Rate Limiting
 
-**Status:** Proposed — pending team review
-
+**Status:** Accepted
 ## Context
+
 Qaryati needs to limit accidental overload and repeated login/register attempts. API errors already have a common response shape and request trace ID.
 
 ## Decision
