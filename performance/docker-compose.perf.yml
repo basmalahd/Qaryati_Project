@@ -1,0 +1,9 @@
+# Performance override: run the API without --reload and with several worker processes.
+#
+#   docker compose -f docker-compose.yml -f performance/docker-compose.perf.yml up -d --force-recreate api
+#
+# Only the start command changes; the image, env and database are the same as the baseline,
+# so before/after numbers are comparable. Change --workers to test other values.
+services:
+  api:
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
