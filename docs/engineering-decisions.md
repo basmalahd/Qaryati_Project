@@ -1,7 +1,6 @@
 # Engineering decisions register
 
-The course specification leaves internal engineering choices to the team. This table lists each one, what we
-chose, and where the reasoning lives. Items marked **Planned** are not done yet and have an owner.
+The course specification leaves internal engineering choices to the team. This table lists each one, what we chose, and where the reasoning lives. Items marked **Planned** are not done yet and have an owner.
 
 | Decision area | What we chose | Reasoning / where |
 |---|---|---|
@@ -20,8 +19,8 @@ chose, and where the reasoning lives. Items marked **Planned** are not done yet 
 | Testing | Unit tests with fakes (no DB/network) + integration tests over HTTP; coverage gate 90% | ADR-009, `docs/testing-strategy.md` |
 | Git workflow | Feature branches, PRs, reviewer rotation, focused commits | `CONTRIBUTING.md` |
 | Configuration | `pydantic-settings` from environment/`.env`; secrets never committed; JWT secret must be 32+ chars | `.env.example` |
-| Rate limiting (API) | **Planned** (Shaymaa) | ADR-010 reserved |
-| Structured logging | **Planned** (Shaymaa) | ADR-011 reserved |
-| CORS, environment configs, CI, Docker production setup | **Planned** (Shaymaa) | - |
-| Database indexing and caching of reads | **Planned** (Hanaa), based on k6 measurements | ADR-012 reserved |
-| Load testing and performance report | **Planned** (Hanaa) | `docs/performance.md` |
+| Rate limiting (API) | Implemented with rate-limit responses (HTTP 429) | ADR-010 |
+| Structured logging | Structured logging implemented | ADR-011 |
+| CORS, environment configs, CI, Docker production setup | Implemented: secure CORS, environment configuration, GitHub Actions CI, and production Docker setup | PRs #14, #16, #18 |
+| Database indexing and caching of reads | **Planned** (Hanaa), based on k6 measurements | ADR-012 |
+| Load testing and performance report | Implemented: k6 load tests, benchmark results and local production validation report | PRs #19, #22, `docs/performance.md` |
