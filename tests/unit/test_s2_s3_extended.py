@@ -1,7 +1,6 @@
 """Extended regression tests for Qaryati S2 (rate limiting) and S3 (JSON logging)."""
 import json
 import logging
-import time
 
 import pytest
 from fastapi import FastAPI
@@ -10,7 +9,6 @@ from fastapi.testclient import TestClient
 from app.core.middleware import add_request_id_middleware
 from app.core.rate_limit import (
     _allow,
-    _client_ip,
     _enabled,
     _positive_int,
     _rule,

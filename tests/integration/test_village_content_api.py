@@ -197,7 +197,8 @@ def test_timeline_order_and_year_filter(client, ctx):
                  {"title": "Undated", "date_note": "Ottoman period"}, {"title": "B", "year": 1917}):
         client.post(url(ctx, "events"), json=body, headers=ctx.editor)
 
-    titles = lambda q="": [e["title"] for e in client.get(f"{url(ctx, 'events')}{q}", headers=ctx.viewer).json()]
+    def titles(q=""):
+        return [e["title"] for e in client.get(f"{url(ctx, 'events')}{q}", headers=ctx.viewer).json()]
     assert titles() == ["A", "B", "C", "Undated"]  # chronological, undated last
     assert titles("?from_year=1900&to_year=1930") == ["B"]
     assert titles("?from_year=1900") == ["B", "C"]

@@ -86,7 +86,10 @@ def test_history_filters_and_ordering(client, ctx):
     add(client, ctx, 3000, 2007)
     add(client, ctx, 2000, 1997)
     add(client, ctx, 2500, 2017)
-    years = lambda q: [r["reference_year"] for r in client.get(f"{ctx.url}{q}", headers=ctx.viewer).json()]
+
+    def years(q):
+        return [r["reference_year"] for r in client.get(f"{ctx.url}{q}", headers=ctx.viewer).json()]
+
     assert years("") == [1997, 2007, 2017]
     assert years("?from_year=2000&to_year=2010") == [2007]
     assert years("?verification_status=verified") == []
