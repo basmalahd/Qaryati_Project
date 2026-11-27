@@ -1,20 +1,34 @@
 # Qaryati - Palestinian Villages Knowledge Platform
 
+<img width="1536" height="1024" alt="Qaryati_ Palestinian Villages Knowledge Platform" src="https://github.com/user-attachments/assets/a09d8071-9eeb-4fc1-9ee2-f53638f79a28" />
+
+## Overview
+
+Qaryati is an API-centric backend for structured, source-backed information about Palestinian villages: identity and names, geography, historical population records, history and heritage, agriculture and facilities. Data quality is part of the domain: every population value cites a source, conflicting values are kept and flagged, and every change is audited.
+
+**Stack:** FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL 16, Docker.  
+**Architecture:** layered (API, services, repositories, models); see [docs/architecture.md](docs/architecture.md).  
+**Out of scope:** user interface, municipal service management.
+
 ## Run
+
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
+
 - Swagger: http://localhost:8000/docs
-- Health:  http://localhost:8000/api/v1/health
+- Health: http://localhost:8000/api/v1/health
 
 ## Test
+
 ```bash
 pip install -r requirements.txt
 pytest
 ```
 
 ## Database migrations
+
 ```bash
 docker compose exec api alembic upgrade head      # apply
 docker compose exec api alembic downgrade -1      # rollback one step
@@ -22,16 +36,31 @@ docker compose exec api alembic revision --autogenerate -m "message"
 ```
 
 ## Authentication
+
 1. Put a strong secret in `.env` (`JWT_SECRET_KEY`, 32+ chars):
-   `docker run --rm python:3.12-slim python -c "import secrets;print(secrets.token_hex(32))"`
-2. Apply migrations: `docker compose exec api alembic upgrade head`
+
+   ```bash
+   docker run --rm python:3.12-slim python -c "import secrets;print(secrets.token_hex(32))"
+   ```
+
+2. Apply migrations:
+
+   ```bash
+   docker compose exec api alembic upgrade head
+   ```
+
 3. Create the first admin:
-   `docker compose exec api python -m app.scripts.create_admin --email you@example.com --name "Your Name"`
+
+   ```bash
+   docker compose exec api python -m app.scripts.create_admin --email you@example.com --name "Your Name"
+   ```
+
 4. In Swagger (`/docs`): `POST /api/v1/auth/login`, then **Authorize** with the access token.
 
 Roles: `admin`, `editor`, `verifier`, `viewer` (public registration creates `viewer`).
 
 ## Permissions
+
 | Action | viewer | verifier | editor | admin |
 |---|---|---|---|---|
 | Read villages / governorates / stats | yes | yes | yes | yes |
@@ -41,9 +70,11 @@ Roles: `admin`, `editor`, `verifier`, `viewer` (public registration creates `vie
 | Read audit log | | | | yes |
 
 ## Villages API
+
 `GET /api/v1/villages?q=&governorate_id=&sort=name_ar|name_en|created_at|id&order=asc|desc&page=1&page_size=20`
 
 ## Sources & population
+
 | Action | viewer | verifier | editor | admin |
 |---|---|---|---|---|
 | Read sources / population history | yes | yes | yes | yes |
@@ -55,14 +86,18 @@ Roles: `admin`, `editor`, `verifier`, `viewer` (public registration creates `vie
 `GET /api/v1/villages/{id}/population?verification_status=&from_year=&to_year=`
 
 ## External API: geocoding (Nominatim / OpenStreetMap)
+
 - `GET /api/v1/villages/{id}/location-suggestions` - suggested coordinates for a village (editor/admin)
 - `GET /api/v1/geocoding/search?q=Nablus&limit=5` - free-text place search (editor/admin)
 
 Suggestions are never written automatically; apply one with `PATCH /api/v1/villages/{id}`.
-Provider settings (all optional): `GEOCODING_BASE_URL`, `GEOCODING_USER_AGENT`,
-`GEOCODING_TIMEOUT_SECONDS`, `GEOCODING_MAX_RETRIES`. Design: `docs/adr/006-external-geocoding-integration.md`.
+
+Provider settings (all optional): `GEOCODING_BASE_URL`, `GEOCODING_USER_AGENT`, `GEOCODING_TIMEOUT_SECONDS`, `GEOCODING_MAX_RETRIES`.
+
+Design: [docs/adr/006-external-geocoding-integration.md](docs/adr/006-external-geocoding-integration.md).
 
 ## Names, relations and geography
+
 | Action | viewer | verifier | editor | admin |
 |---|---|---|---|---|
 | Read names / nearby places | yes | yes | yes | yes |
@@ -74,8 +109,9 @@ Provider settings (all optional): `GEOCODING_BASE_URL`, `GEOCODING_USER_AGENT`,
 - `elevation_m` and `area_km2` are regular optional fields of `POST|PATCH /api/v1/villages`.
 
 ## History, landmarks, heritage, economy, facilities
-Under `/api/v1/villages/{id}/`: `events` (timeline, `?from_year=&to_year=`), `landmarks` (`?category=`),
-`heritage` (`?category=`), `economy` (`?category=`), `facilities` (`?facility_type=`).
+
+Under `/api/v1/villages/{id}/`: `events` (timeline, `?from_year=&to_year=`), `landmarks` (`?category=`), `heritage` (`?category=`), `economy` (`?category=`), `facilities` (`?facility_type=`).
+
 Each supports `GET`, `POST`, `PATCH /{item_id}` and `DELETE /{item_id}`; every item can cite a `source_id`.
 
 | Action | viewer | verifier | editor | admin |
@@ -85,18 +121,20 @@ Each supports `GET`, `POST`, `PATCH /{item_id}` and `DELETE /{item_id}`; every i
 | Delete | | | | yes |
 
 ## Testing
-```
+
+```bash
 pip install -r requirements.txt
 pytest -m unit          # fast, no DB, no network
 pytest -m integration   # HTTP API + in-memory SQLite
 pytest --cov=app        # everything + coverage gate (>= 90%)
 ```
+
 Strategy and trade-offs: [docs/testing-strategy.md](docs/testing-strategy.md) (ADR-009).
+
 Developer conventions: [docs/developer-guide.md](docs/developer-guide.md).
 
-<!-- Paste this section into README.md (after "Testing") -->
-
 ## Documentation
+
 | Topic | Where |
 |---|---|
 | System overview and architecture | [docs/architecture.md](docs/architecture.md) |
