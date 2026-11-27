@@ -59,3 +59,14 @@ class PopulationRead(BaseModel):
     has_conflict: bool = False
     created_at: datetime
     updated_at: datetime
+
+
+class LatestVillagePopulation(BaseModel):
+    village_id: int
+    name_ar: str
+    name_en: str | None
+    governorate_id: int
+    population: int
+    reference_year: int
+    verification_status: VerificationStatus
+    source_id: int

@@ -151,6 +151,7 @@ def test_history_filters_and_ordering(client, ctx):
     add(client, ctx, 2000, 1997)
     add(client, ctx, 2500, 2017)
 
+
     def years(query):
         response = client.get(
             f"{ctx.url}{query}",
@@ -160,6 +161,10 @@ def test_history_filters_and_ordering(client, ctx):
             record["reference_year"]
             for record in response.json()
         ]
+
+    def years(q):
+        return [r["reference_year"] for r in client.get(f"{ctx.url}{q}", headers=ctx.viewer).json()]
+
 
     assert years("") == [1997, 2007, 2017]
     assert years("?from_year=2000&to_year=2010") == [2007]
@@ -316,13 +321,13 @@ def test_delete_is_admin_only_and_audited(client, ctx):
     ).json()
 
     assert [
-               entry["action"]
-               for entry in logs["items"]
-           ] == [
-               "delete",
-               "update",
-               "create",
-           ]
+        entry["action"]
+        for entry in logs["items"]
+    ] == [
+        "delete",
+        "update",
+        "create",
+    ]
 
     assert logs["items"][1]["changes"] == {
         "before": {
@@ -334,6 +339,182 @@ def test_delete_is_admin_only_and_audited(client, ctx):
     }
 
     assert (
-            logs["items"][0]["changes"]["before"]["population"]
-            == 1000
+        logs["items"][0]["changes"]["before"]["population"]
+        == 1000
     )
+
+
+# ---- native SQL: latest population per village ---------------------------------------
+
+
+def _second_village(
+    client,
+    ctx,
+    slug="other",
+    name_ar="أخرى",
+    name_en="Other",
+):
+    from tests.helpers import make_village
+
+    return make_village(
+        client,
+        ctx.editor,
+        ctx.gov,
+        slug=slug,
+        name_ar=name_ar,
+        name_en=name_en,
+    )
+
+
+def _add_to(client, ctx, village_id, population, year, source=None):
+    response = client.post(
+        f"{API}/villages/{village_id}/population",
+        json={
+            "population": population,
+            "reference_year": year,
+            "source_id": source or ctx.s1,
+        },
+        headers=ctx.editor,
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_latest_population_picks_newest_year_per_village(client, ctx):
+    add(client, ctx, population=900, year=1997)
+    add(client, ctx, population=1500, year=2017)
+
+    other = _second_village(client, ctx)
+    _add_to(client, ctx, other["id"], 3000, 2007)
+
+    rows = client.get(
+        f"{API}/stats/latest-population",
+        headers=ctx.viewer,
+    ).json()
+
+    # Biggest first, exactly one row per village, newest year wins.
+    assert [
+        (r["village_id"], r["population"], r["reference_year"])
+        for r in rows
+    ] == [
+        (other["id"], 3000, 2007),
+        (ctx.vid, 1500, 2017),
+    ]
+
+
+def test_latest_population_prefers_verified_and_ignores_disputed(
+    client,
+    ctx,
+):
+    pending = add(
+        client,
+        ctx,
+        population=1000,
+        year=2017,
+    ).json()
+
+    verified = add(
+        client,
+        ctx,
+        population=1100,
+        year=2017,
+        source=ctx.s2,
+    ).json()
+
+    client.patch(
+        f"{ctx.url}/{verified['id']}/status",
+        json={"status": "verified"},
+        headers=ctx.verifier,
+    )
+
+    other = _second_village(client, ctx)
+    bad = _add_to(client, ctx, other["id"], 9999, 2020)
+
+    client.patch(
+        f"{API}/villages/{other['id']}/population/{bad['id']}/status",
+        json={"status": "disputed"},
+        headers=ctx.verifier,
+    )
+
+    _add_to(client, ctx, other["id"], 500, 2010)
+
+    rows = {
+        r["village_id"]: r
+        for r in client.get(
+            f"{API}/stats/latest-population",
+            headers=ctx.viewer,
+        ).json()
+    }
+
+    assert (
+        rows[ctx.vid]["population"] == 1100
+        and rows[ctx.vid]["verification_status"] == "verified"
+    )
+
+    assert rows[other["id"]]["population"] == 500
+
+    # The disputed 2020 record is skipped.
+    assert pending["id"] != verified["id"]
+
+
+def test_latest_population_filters_limits_and_skips_villages_without_data(
+    client,
+    ctx,
+):
+    add(client, ctx, population=1000, year=2017)
+
+    other_gov = make_gov(
+        client,
+        ctx.admin,
+        "طولكرم",
+        "Tulkarm",
+    )
+
+    from tests.helpers import make_village
+
+    far = make_village(
+        client,
+        ctx.editor,
+        other_gov,
+        slug="far",
+        name_ar="بعيدة",
+        name_en="Far",
+    )
+
+    _add_to(client, ctx, far["id"], 70, 2017)
+
+    make_village(
+        client,
+        ctx.editor,
+        ctx.gov,
+        slug="empty",
+        name_ar="فارغة",
+        name_en="Empty",
+    )
+
+    # No population records for this village.
+
+    by_gov = client.get(
+        f"{API}/stats/latest-population?governorate_id={ctx.gov}",
+        headers=ctx.viewer,
+    ).json()
+
+    # Filtered by governorate, and the empty village is not listed.
+    assert [r["village_id"] for r in by_gov] == [ctx.vid]
+
+    limited = client.get(
+        f"{API}/stats/latest-population?limit=1",
+        headers=ctx.viewer,
+    ).json()
+
+    assert len(limited) == 1
+    assert limited[0]["population"] == 1000
+
+    assert client.get(
+        f"{API}/stats/latest-population?limit=0",
+        headers=ctx.viewer,
+    ).status_code == 422
+
+    assert client.get(
+        f"{API}/stats/latest-population",
+    ).status_code == 401

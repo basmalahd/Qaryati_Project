@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.population_record import PopulationRecord as PR
@@ -71,3 +71,56 @@ class PopulationRepository:
     def delete(self, record: PR) -> None:
         self.db.delete(record)
         self.db.flush()
+
+    # ---- reads (native SQL) -----------------------------------------
+    def latest_per_village(self, governorate_id: int | None, limit: int) -> list[dict]:
+        """Most recent usable population record of every village, in native SQL.
+
+        Written as raw SQL on purpose (the project requires native-SQL cases): a window
+        function picks one row per village, which is awkward to express in the ORM.
+        Ranking: newest year first, then verified > pending, then newest record id.
+        Disputed records are ignored. Villages without any usable record are left out.
+        Only the optional filter is assembled in Python; every value is a bound parameter.
+        """
+        params: dict = {"limit": limit}
+        governorate_filter = ""
+        if governorate_id is not None:
+            governorate_filter = "AND v.governorate_id = :governorate_id"
+            params["governorate_id"] = governorate_id
+
+        rows = self.db.execute(
+            text(
+                f"""
+                SELECT v.id AS village_id,
+                       v.name_ar,
+                       v.name_en,
+                       v.governorate_id,
+                       p.population,
+                       p.reference_year,
+                       p.verification_status,
+                       p.source_id
+                FROM villages v
+                JOIN (
+                    SELECT pr.village_id,
+                           pr.population,
+                           pr.reference_year,
+                           pr.verification_status,
+                           pr.source_id,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY pr.village_id
+                               ORDER BY pr.reference_year DESC,
+                                        CASE pr.verification_status
+                                             WHEN 'verified' THEN 0 ELSE 1 END,
+                                        pr.id DESC
+                           ) AS rn
+                    FROM population_records pr
+                    WHERE pr.verification_status <> 'disputed'
+                ) p ON p.village_id = v.id AND p.rn = 1
+                WHERE 1 = 1 {governorate_filter}
+                ORDER BY p.population DESC, v.name_ar
+                LIMIT :limit
+                """  # noqa: S608 - the only interpolated part is a fixed literal clause
+            ),
+            params,
+        ).mappings()
+        return [dict(r) for r in rows]
