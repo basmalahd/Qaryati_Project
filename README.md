@@ -136,6 +136,7 @@ Developer conventions: [docs/developer-guide.md](docs/developer-guide.md).
 
 | Topic | Where |
 |---|---|
+| Project wiki (overview, architecture, ERD, API design, security, performance, ADRs) | [Wiki](https://github.com/basmalahd/Qaryati_Project/wiki) |
 | System overview and architecture | [docs/architecture.md](docs/architecture.md) |
 | Database schema (ERD) | [docs/erd.md](docs/erd.md) |
 | API conventions, auth flow, error model, roles | [docs/api.md](docs/api.md) |
