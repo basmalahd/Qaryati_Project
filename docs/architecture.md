@@ -27,7 +27,7 @@ flowchart TD
 
     subgraph repo["Repository layer: data access"]
         orm["SQLAlchemy ORM repositories"]
-        rawsql["Native SQL: stats query"]
+        rawsql["Native SQL: stats and latest-population queries"]
     end
 
     subgraph integ["Integration layer: ports and adapters"]
@@ -76,7 +76,7 @@ flowchart TD
 |---|---|---|
 | API (`app/api`) | HTTP, request/response validation, authentication, role checks | contain business rules or queries |
 | Services (`app/services`) | Business rules, transaction boundary, audit, mapping external errors | know about HTTP or SQL details |
-| Repositories (`app/repositories`) | Queries (ORM + one native SQL case), eager loading, pagination | decide business rules |
+| Repositories (`app/repositories`) | Queries (ORM + two native SQL cases), eager loading, pagination | decide business rules |
 | Integrations (`app/integrations`) | Talk to external providers behind a port | leak provider details upward |
 | Models / schemas | Tables (ORM) / request-response DTOs (Pydantic) | depend on upper layers |
 
