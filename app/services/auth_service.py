@@ -8,6 +8,7 @@ from app.core.errors import ConflictError, NotFoundError, UnauthorizedError
 from app.models.user import Role, User
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import RegisterRequest, TokenResponse
+from app.services.audit_service import AuditService
 
 
 class AuthService:
@@ -16,6 +17,7 @@ class AuthService:
     def __init__(self, db: Session):
         self.db = db
         self.users = UserRepository(db)
+        self.audit = AuditService(db)
 
     def register(self, data: RegisterRequest) -> User:
         email = data.email.lower()
@@ -59,11 +61,16 @@ class AuthService:
             raise UnauthorizedError("User no longer exists or is inactive")
         return self.issue_tokens(user)
 
-    def change_role(self, user_id: int, role: Role) -> User:
+    def change_role(self, user_id: int, role: Role, actor: User) -> User:
         user = self.users.get_by_id(user_id)
         if not user:
             raise NotFoundError("User not found")
+        before = {"role": user.role}
         user.role = role.value
+        self.audit.record(
+            actor, "update", "user", user.id,
+            {"before": before, "after": {"role": user.role}},
+        )
         self.db.commit()
         self.db.refresh(user)
         return user
