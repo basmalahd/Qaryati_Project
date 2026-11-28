@@ -20,6 +20,6 @@ def update_role(
     user_id: int,
     body: RoleUpdate,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_roles(Role.ADMIN)),
+    admin: User = Depends(require_roles(Role.ADMIN)),
 ):
-    return AuthService(db).change_role(user_id, body.role)
+    return AuthService(db).change_role(user_id, body.role, admin)

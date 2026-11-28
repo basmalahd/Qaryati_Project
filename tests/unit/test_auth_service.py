@@ -1,5 +1,3 @@
-
-
 import pytest
 
 from app.core import security
@@ -7,7 +5,7 @@ from app.core.errors import ConflictError, NotFoundError, UnauthorizedError
 from app.models.user import Role, User
 from app.schemas.auth import RegisterRequest
 from app.services.auth_service import AuthService
-from tests.unit.fakes import make_db
+from tests.unit.fakes import USER, FakeAudit, make_db
 
 
 class FakeUsers:
@@ -95,7 +93,18 @@ def test_refresh_rejects_deactivated_users_and_wrong_token_types():
 def test_change_role_of_unknown_user_is_not_found():
     service, calls = make_service()
     with pytest.raises(NotFoundError):
-        service.change_role(99, Role.EDITOR)
+        service.change_role(99, Role.EDITOR, USER)
     user = seed(service)
-    assert service.change_role(user.id, Role.EDITOR).role == "editor"
+    assert service.change_role(user.id, Role.EDITOR, USER).role == "editor"
     assert calls == ["commit"]
+
+
+def test_change_role_is_audited_before_commit():
+    service, calls = make_service()
+    service.audit = FakeAudit(calls)
+    user = seed(service)
+    service.change_role(user.id, Role.EDITOR, USER)
+    assert calls == ["audit", "commit"]
+    action, entity, entity_id, changes = service.audit.entries[0]
+    assert (action, entity, entity_id) == ("update", "user", user.id)
+    assert changes == {"before": {"role": "viewer"}, "after": {"role": "editor"}}
